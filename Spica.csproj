@@ -6,8 +6,4 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <UserSecretsId>528f0c56-3d4d-4dfc-9b36-7318982ae2a6</UserSecretsId>
   </PropertyGroup>
-
-  <Target Name="Rollup" BeforeTargets="Build">
-    <Exec Command="npm run build" />
-  </Target>
 </Project>

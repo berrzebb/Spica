@@ -1,3 +1,7 @@
 Dockerfile
+dockerenv
+.gitignore
+build.cmd
+run.cmd
 [b|B]in
 [o|O]bj
