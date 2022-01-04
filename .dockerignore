@@ -1,6 +1,7 @@
 Dockerfile
 dockerenv
 .gitignore
+cert.cmd
 build.cmd
 run.cmd
 [b|B]in
