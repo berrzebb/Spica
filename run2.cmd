@@ -1,0 +1,1 @@
+docker run -it --rm --name spica -p 8080:80 spica
