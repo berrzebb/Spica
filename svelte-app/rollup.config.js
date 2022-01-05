@@ -12,11 +12,11 @@ import resolve from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
 import json from '@rollup/plugin-json';
 import typescript from '@rollup/plugin-typescript';
-
 import livereload from 'rollup-plugin-livereload';
 import { terser } from 'rollup-plugin-terser';
 
 const {isDev, buildDir, cssDir, appDir } = require('./configuration');
+
 const plugins = [
     alias({
         entries: [
@@ -25,7 +25,6 @@ const plugins = [
     }),
     svelte(require('./svelte.config')),
     scss({
-        output: `${cssDir}/bundle.css`,
         processor: css => postcss([autoprefixer])
         .process(css)
         .then(result => result.css)
@@ -74,7 +73,7 @@ function serve() {
     return {
 		writeBundle(){
 			if (server) return;
-			server = require('child_process').spawn('dotnet',['Spica.dll'], {
+			server = require('child_process').spawn('/app/Spica', {
 				stdio: ['ignore', 'inherit', 'inherit'],
 				shell: true
 			});

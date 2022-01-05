@@ -12,6 +12,7 @@ module.exports = {
             plugins: [autoprefixer()]
         }
     }),
+    emitCss: true,
     compilerOptions: {
         dev: isDev,
     },
