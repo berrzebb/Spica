@@ -1,14 +1,26 @@
-import svelte from 'rollup-plugin-svelte';
+import svelte from 'rollup-plugin-svelte-hot';
 import commonjs from '@rollup/plugin-commonjs';
 import resolve from '@rollup/plugin-node-resolve';
 import livereload from 'rollup-plugin-livereload';
 import { terser } from 'rollup-plugin-terser';
 import typescript from '@rollup/plugin-typescript';
 import json from '@rollup/plugin-json';
-import css from 'rollup-plugin-css-only'
 import sveltePreprocess from 'svelte-preprocess';
-const production = !process.env.ROLLUP_WATCH;
+import scss from 'rollup-plugin-scss';
+import sass from 'node-sass';
 
+import hmr from 'rollup-plugin-hot';
+import css from 'rollup-plugin-css-only';
+import autoprefixer from 'autoprefixer';
+
+const nollup = !!process.env.NOLLUP;
+const watch = !!process.env.ROLLUP_WATCH;
+const useLiveReload = !!process.env.LIVERELOAD;
+
+const dev = watch || useLiveReload;
+const production = !dev;
+
+const hot = watch && !useLiveReload;
 function serve() {
     let server;
 
@@ -29,6 +41,16 @@ function serve() {
 		}
     }
 }
+const sveltePreprocessing = sveltePreprocess({
+	sourceMap : !production,
+	sass: {
+		sync: true,
+		implementation : sass
+	},
+	postcss: {
+		plugins: [autoprefixer()]
+	}
+});
 export default {
 	input: 'svelte-app/main.ts',
 	output: {
@@ -38,16 +60,25 @@ export default {
 		name: 'app',
     },
 	plugins: [
-        json(),
 		svelte({
-            preprocess: sveltePreprocess({sourceMap : !production}),
-            compilerOptions: {
-                // enable run-time checks when not in production
-                dev: !production
-			}
+            preprocess: sveltePreprocessing,
+			hot: hot && {
+				optimistic: true,
+				noPreserveState: false
+			},
+			emitCss: true,
+			compilerOptions: {
+				dev: !production,
+			},
 		}),
-        css({ output: 'bundle.css'}),
-
+		css({
+			output: 'css/bundle.css'
+		}),
+		scss({
+			output: 'css/assets.css',
+			failOnError: true,
+			processor: css => postcss([autoprefixer])
+		}),
 		// If you have external dependencies installed from
 		// npm, you'll most likely need these plugins. In
 		// some cases you'll need additional configuration -
@@ -55,16 +86,23 @@ export default {
 		// https://github.com/rollup/plugins/tree/master/packages/commonjs
 		resolve({
 			browser: true,
-            dedupe: ['svelte']
+            dedupe: importee => importee === 'svelte' || importee.startsWith('svelte/')
 		}),
 		commonjs(),
+		json(),
         typescript({
             sourceMap : !production,
             inlineSources: !production
         }),
-        !production && serve(),
-		!production && livereload('wwwroot'),
-		production && terser()
+        dev && !nollup && serve(),
+		!production && livereload("svelte-app"),
+		production && terser(),
+		hmr({
+			public: "svelte-app",
+			inMemory: true,
+			host: "0.0.0.0",
+			compatModuleHot: !hot
+		})
 	],
 	watch: {
 		clearScreen: false

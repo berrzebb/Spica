@@ -20,4 +20,5 @@ COPY package.json .
 RUN npm install
 COPY rollup.config.js .
 COPY tsconfig.json .
+
 ENTRYPOINT ["npm", "run", "dev"]

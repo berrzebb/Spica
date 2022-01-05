@@ -3,11 +3,12 @@
 </script>
 
 <main>
-	<h1>Hello 456{name}!</h1>
+	<h1>Wrong {name}!</h1>
+	<h1>Welcome</h1>
 	<p>Visit the <a href="https://svelte.dev/tutorial">Svelte tutorial</a> to learn how to build Svelte apps.</p>
 </main>
 
-<style>
+<style lang="scss">
 	main {
 		text-align: center;
 		padding: 1em;
