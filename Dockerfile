@@ -16,9 +16,11 @@ FROM mcr.microsoft.com/dotnet/aspnet:6.0-alpine as runtime
 WORKDIR /app
 RUN apk add --update nodejs npm
 COPY --from=backend /build/publish .
-COPY package.json .
+COPY svelte-app/package.json .
 RUN npm install
-COPY rollup.config.js .
-COPY tsconfig.json .
+COPY svelte-app/rollup.config.js .
+COPY svelte-app/tsconfig.json .
+COPY svelte-app/svelte.config.js .
+COPY svelte-app/configuration.js .
 
 ENTRYPOINT ["npm", "run", "dev"]
