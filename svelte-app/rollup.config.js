@@ -31,9 +31,13 @@ const plugins = [
     }),
     resolve({
         browser: true,
+        jsnext: true,
+        module: true,
         dedupe: ['svelte']
     }),
-    commonjs(),
+    commonjs({
+        include: 'node_modules/rxjs/**'
+    }),
     json(),
     typescript({
         inlineSources: isDev

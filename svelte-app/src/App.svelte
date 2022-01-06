@@ -1,23 +1,110 @@
 <script lang='ts'>
-	export let name : string;
+	import { onMount } from 'svelte';
+	import { switchMap, tap } from 'rxjs/operators';
+	import { of, pipe, interval } from 'rxjs';
+	import SvelteSubject from '@/core/rxjs/SvelteSubject';
+
+	const time = new SvelteSubject({
+		hours: 0,
+		minutes: 0,
+		seconds: 0
+	});
+	time.set = time.next;
+
+	const timeSource = interval(1000).pipe(
+		switchMap(_ => {
+			let time = new Date()
+			return of({
+				hours: time.getHours(),
+				minutes: time.getMinutes(),
+				seconds: time.getSeconds()
+			})
+		}),
+		tap(console.log));
+	$: hours = $time.hours;
+	$: minutes= $timeSource.minutes;
+	$: seconds = $timeSource.seconds;
 </script>
 
-<main>
-	<h1>Hi!! {name}!</h1>
-	<p>Visit the <a href="https://svelte.dev/tutorial">Svelte tutorial</a> to learn how to build Svelte apps.</p>
-</main>
+<svg viewBox='-50 -50 100 100'>
+	<circle class='clock-face' r='48'/>
 
-<style lang="scss">
-	h1 {
-		color:$primary-color;
-		text-transform: uppercase;
-		font-size: 4em;
-		font-weight: 100;
-		user-select: none;
+	<!-- markers -->
+	{#each [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55] as minute}
+		<line
+			class='major'
+			y1='35'
+			y2='45'
+			transform='rotate({30 * minute})'
+		/>
+
+		{#each [1, 2, 3, 4] as offset}
+			<line
+				class='minor'
+				y1='42'
+				y2='45'
+				transform='rotate({6 * (minute + offset)})'
+			/>
+		{/each}
+	{/each}
+
+	<!-- hour hand -->
+	<line
+		class='hour'
+		y1='2'
+		y2='-20'
+		transform='rotate({30 * hours + minutes / 2})'
+	/>
+
+	<!-- minute hand -->
+	<line
+		class='minute'
+		y1='4'
+		y2='-30'
+		transform='rotate({6 * minutes + seconds / 10})'
+	/>
+
+	<!-- second hand -->
+	<g transform='rotate({6 * seconds})'>
+		<line class='second' y1='10' y2='-38'/>
+		<line class='second-counterweight' y1='10' y2='2'/>
+	</g>
+</svg>
+
+<style>
+	svg {
+		width: 100%;
+		height: 100%;
 	}
-	@media (min-width: 640px) {
-		main {
-			max-width: none;
-		}
+
+	.clock-face {
+		stroke: #333;
+		fill: white;
+	}
+
+	.minor {
+		stroke: #999;
+		stroke-width: 0.5;
+	}
+
+	.major {
+		stroke: #333;
+		stroke-width: 1;
+	}
+
+	.hour {
+		stroke: #333;
+	}
+
+	.minute {
+		stroke: #666;
+	}
+
+	.second, .second-counterweight {
+		stroke: rgb(180,0,0);
+	}
+
+	.second-counterweight {
+		stroke-width: 3;
 	}
 </style>
