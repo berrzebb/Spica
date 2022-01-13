@@ -32,4 +32,8 @@ app.MapRazorPages();
 app.MapControllerRoute(name: "default", pattern: "{controller}/{action=Index}/{id?}");
 app.MapFallbackToFile("index.html").AllowAnonymous();
 
-app.Run();
+app.UseEndpoints(endpoints => {
+    endpoints.MapHealthChecks("/health").RequireAuthorization();
+
+});
+app.RunAsync();

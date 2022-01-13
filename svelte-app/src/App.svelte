@@ -2,28 +2,26 @@
 	import { onMount } from 'svelte';
 	import { switchMap, tap } from 'rxjs/operators';
 	import { of, pipe, interval } from 'rxjs';
-	import SvelteSubject from '@/core/rxjs/SvelteSubject';
 
-	const time = new SvelteSubject({
-		hours: 0,
-		minutes: 0,
-		seconds: 0
-	});
-	time.set = time.next;
-
-	const timeSource = interval(1000).pipe(
-		switchMap(_ => {
-			let time = new Date()
-			return of({
-				hours: time.getHours(),
-				minutes: time.getMinutes(),
-				seconds: time.getSeconds()
-			})
-		}),
-		tap(console.log));
-	$: hours = $time.hours;
-	$: minutes= $timeSource.minutes;
-	$: seconds = $timeSource.seconds;
+	let time = { hours: 0, minutes: 0, seconds: 0};
+		onMount(()=>{
+			let subscription = interval(1000).pipe(
+				switchMap(_ => {
+					let time = new Date()
+					return of({
+						hours: time.getHours(),
+						minutes: time.getMinutes(),
+						seconds: time.getSeconds()
+					})
+				}),
+				tap(console.log)).subscribe(x => time = x)
+			return () => {
+				subscription.unsubscribe();
+			}
+		})
+	$: hours = time.hours;
+	$: minutes= time.minutes;
+	$: seconds = time.seconds;
 </script>
 
 <svg viewBox='-50 -50 100 100'>
@@ -70,7 +68,7 @@
 		<line class='second-counterweight' y1='10' y2='2'/>
 	</g>
 </svg>
-
+<div>{hours}:{minutes}:{seconds}</div>
 <style>
 	svg {
 		width: 100%;
