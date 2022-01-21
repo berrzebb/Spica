@@ -1,4 +1,5 @@
 public static class Constants {
+    public static readonly string Domain = "https://music.youtube.com"; 
     public static readonly HashSet<string> Filters = new HashSet<string>(){
         "albums",
         "artists",
@@ -12,6 +13,17 @@ public static class Constants {
         "library",
         "uploads",
     };
+    public static readonly Dictionary<string,string> Orders = new Dictionary<string, string>(){
+        {"a_to_z", "ggMGKgQIARAA"},
+        {"z_to_a", "ggMGKgQIARAB"},
+        {"recently_added", "ggMGKgQIABAB"}
+    };
+    public static readonly Dictionary<string,string> Ratings = new Dictionary<string, string>(){
+        {"LIKE", "like/like"},
+        {"DISLIKE", "like/dislike"},
+        {"INDIFFERENT", "like/removelike"}
+    };
+
     public static readonly Dictionary<string, string> FilteredParams = new Dictionary<string, string>(){
         {"songs", "I"},
         {"videos", "Q"},

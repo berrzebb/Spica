@@ -22,6 +22,7 @@ public class YoutubeMusicController : ControllerBase {
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<string>> Search(string query, string filter = "songs", string scope = "library") {
         var result = await _service.Search(query, filter, scope);
+        Console.WriteLine($"[Search] {result.ToString()}");
         if(result.StatusCode == System.Net.HttpStatusCode.OK){
             return await result.Content.ReadAsStringAsync();
         } else {
