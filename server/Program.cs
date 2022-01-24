@@ -1,18 +1,16 @@
 using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
-// Retrive Youtube Music Configuration
-var section = builder.Configuration.GetSection(nameof(YoutubeMusicClientConfig));
-var youtubeMusicClientConfig = section.Get<YoutubeMusicClientConfig>();
 // Create Youtube Music Service
-var youtubeMusicService = new YoutubeMusicService(youtubeMusicClientConfig);
+var youtubeMusicService = new YoutubeMusicService();
 // Add Youtube Music Service Singleton
 builder.Services.AddSingleton<IYoutubeMusicService>(youtubeMusicService);
 
 // Add services to the container.
 builder.Services.AddCors();
 
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+.AddJsonOptions(options => options.JsonSerializerOptions.WriteIndented = true);
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options => {
     options.SwaggerDoc("v1", new OpenApiInfo

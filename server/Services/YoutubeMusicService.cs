@@ -5,15 +5,14 @@ using System.Text.RegularExpressions;
 using Newtonsoft.Json.Linq;
 
 public class YoutubeMusicService : IYoutubeMusicService {
-    readonly YoutubeMusicClientConfig _config;
     HttpClientHandler _handler;
     HttpClient _client;
    JObject _ytcfg = new JObject();
-    public YoutubeMusicService(YoutubeMusicClientConfig config) {
+    public YoutubeMusicService() {
         Console.WriteLine("Initialize YoutubeMusic Service");
         Console.WriteLine($"Base Address => {Constants.Domain}");
-        _config = config;
         _handler =new HttpClientHandler(){ 
+            AutomaticDecompression = DecompressionMethods.All,
             UseDefaultCredentials = true,
             UseCookies = true,
             UseProxy = true
@@ -21,7 +20,8 @@ public class YoutubeMusicService : IYoutubeMusicService {
         _client = new HttpClient(_handler);
        _client.BaseAddress = new Uri(Constants.Domain);
        _client.DefaultRequestHeaders.Add("User-Agent", Constants.UserAgent);
-       _client.DefaultRequestHeaders.Add("accept-language", "en-US,en;q=0.5");
+       _client.DefaultRequestHeaders.Add("Cookie", Constants.DefaultCookie);
+       //_client.DefaultRequestHeaders.Add("accept-language", "en-US,en;q=0.5");
        //InitializeHeaders(_client.DefaultRequestHeaders);
        Initialize();
     }
@@ -33,7 +33,6 @@ public class YoutubeMusicService : IYoutubeMusicService {
             var match = matches[0].ToString();
             match = match.Replace("ytcfg.set(","").Replace(");", "");
             _ytcfg = JObject.Parse(match);
-            Console.WriteLine($"Initialize Header => {result.Headers.ToString()}");
         }
     }
     private string GetYoutubeMusicConfig(string key, string defaultvalue = ""){
@@ -47,74 +46,47 @@ public class YoutubeMusicService : IYoutubeMusicService {
     private TimeZoneInfo timeZone => TimeZoneInfo.Local;
     private double GetUtcOffset() => timeZone.GetUtcOffset(DateTimeOffset.UtcNow).TotalSeconds;
     private string GetTimeZone() => timeZone.DisplayName;
-    private void InitializeHeaders(HttpRequestHeaders header){
-        Console.WriteLine($"UTC-Offset {GetUtcOffset()}");
+    private HttpRequestHeaders InitializeHeaders(HttpRequestHeaders header){
         header.Add("Accept", "*/*");
-        header.Add("Accept-Encoding", "gzip,deflate,br");
+        //header.Add("Accept-Encoding", "gzip,deflate,br");
         header.Add("User-Agent", Constants.UserAgent);
         header.Add("x-origin", Constants.Domain);
 //        header.Add("x-goog-pageid",GetYoutubeMusicConfig("PAGE_ID"));
         header.Add("x-goog-vistor-id",GetYoutubeMusicConfig("VISITOR_DATA"));
-        header.Add("x-youtube-client-name", GetYoutubeMusicConfig("INNERTUBE_CONTEXT_CLIENT_NAME"));
-        header.Add("x-youtube-client-version", GetYoutubeMusicConfig("INNERTUBE_CLIENT_VERSION"));
-        header.Add("x-youtube-device", GetYoutubeMusicConfig("DEVICE"));
-        //header.Add("x-youtube-page-CL", GetYoutubeMusicConfig("PAGE_CL"));
-        //header.Add("X-YouTube-Page-Label", GetYoutubeMusicConfig("PAGE_BUILD_LABEL"));
+        header.Add("x-youtube-client-name", GetYoutubeMusicConfig("INNERTUBE_CLIENT_NAME", "WEB_REMIX"));
+        header.Add("x-youtube-client-version", GetYoutubeMusicConfig("INNERTUBE_CLIENT_VERSION","1.20220112.00.00"));
+        header.Add("x-youtube-device", GetYoutubeMusicConfig("DEVICE","cbr=Firefox&cbrver=72.0&ceng=Gecko&cengver=72.0&cos=Windows&cosver=10.0&cplatform=DESKTOP"));
+        header.Add("x-youtube-page-CL", GetYoutubeMusicConfig("PAGE_CL", "421282262"));
+        header.Add("X-YouTube-Page-Label", GetYoutubeMusicConfig("PAGE_BUILD_LABEL", "youtube.music.web.client_20220112_00_RC00"));
         //header.Add("X-YouTube-Utc-Offset", (-GetUtcOffset()).ToString());
         //header.Add("X-YouTube-Time-Zone", GetTimeZone());
+        header.Add("Referer", Constants.Domain);
         header.Add("Cookie", _handler.CookieContainer.GetCookieHeader(new Uri(Constants.Domain)));
+        return header;
     }
     private JObject InitializeContext(){
         JObject ret = new JObject();
-        var context = GetYoutubeMusicConfig("INNERTUBE_CONTEXT");
+        var context = GetYoutubeMusicConfig("INNERTUBE_CONTEXT", "{\"context\":{\"client\":{\"hl\":\"en\", \"gl\":\"KR\", \"clientName\":\"WEB_REMIX\", \"clientVersion\":\"1.20220112.00.00\"}}");
         if(context != ""){
-        ret.Add("context", JObject.Parse(context));
+            ret.Add("context", JObject.Parse(context));
         } else {
             ret = JObject.FromObject(new
                 {
                 context = new
                 {
-                    capabilities = new List<string>(),
                     client = new
                     {
-                        browserName = GetYoutubeMusicConfig("INNERTUBE_CLIENT_NAME"),
-                        browserVersion = GetYoutubeMusicConfig("INNERTUBE_CLIENT_VERSION"),
-                        experimentIds = new List<string>(),
-                        experimentsToken = "",
-                        gl = GetYoutubeMusicConfig("GL"),
-                        hl = GetYoutubeMusicConfig("HL"),
-                        locationInfo = new
-                        {
-                            locationPermissionAuthorizationStatus = "LOCATION_PERMISSION_AUTHORIZATION_STATUS_UNSUPPORTED",
-                        },
-                        musicAppInfo = new
-                        {
-                            musicActivityMasterSwitch = "MUSIC_ACTIVITY_MASTER_SWITCH_INDETERMINATE",
-                            musicLocationMasterSwitch = "MUSIC_LOCATION_MASTER_SWITCH_INDETERMINATE",
-                            pwaInstallabilityStatus = "PWA_INSTALLABILITY_STATUS_UNKNOWN",
-                        },
-                        utcOffsetMinutes = -GetUtcOffset()
-                    },
-                    request = new
-                    {
-                        consistencyTokenJars = new List<string>(),
-                        internalExperimentFlags = new [] {
-                            new { key = "force_music_enable_outertube_tastebuilder_browse", value = "true"},
-                            new { key = "force_music_enable_outertube_playlist_detail_browse", value = "true"},
-                            new { key = "force_music_enable_outertube_search_suggestions", value = "true"}
-                        },
-                        sessionIndex = new List<string>()
-                    },
-                    user = new
-                    {
-                        lockedSafetyMode = false,
+                        hl = GetYoutubeMusicConfig("INNERTUBE_CONTEXT_HL","en"),
+                        gl = GetYoutubeMusicConfig("INNERTUBE_CONTEXT_GL","KR"),
+                        clientName = GetYoutubeMusicConfig("INNERTUBE_CLIENT_NAME","WEB_REMIX"),
+                        clientVersion = GetYoutubeMusicConfig("INNERTUBE_CLIENT_VERSION","1.20220112.00.00"),
                     }
                 }
             });
         }
         return ret;
     }
-    private string CreateEndPoint(string endPointName) => $"yotubei/{GetYoutubeMusicConfig("INNERTUBE_API_VERSION", "v1")}/music/{endPointName}?alt=json&key={GetYoutubeMusicConfig("INNERTUBE_API_KEY")}";
+    private string CreateEndPoint(string endPointName) => $"youtubei/{GetYoutubeMusicConfig("INNERTUBE_API_VERSION", "v1")}/{endPointName}?alt=json&key={GetYoutubeMusicConfig("INNERTUBE_API_KEY","AIzaSyC9XL3ZjWddXya6X74dJoCTL-WEYFDNX30")}";
 
     private string CreateSearchParams(string filter, string scope, bool ignoreSpelling) {
         string param =  "";
@@ -175,24 +147,33 @@ public class YoutubeMusicService : IYoutubeMusicService {
     private async Task<HttpResponseMessage> SendRequest(string url,JObject? Content){
         HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, url);
         InitializeHeaders(request.Headers);
-        Console.WriteLine($"Request Header => {request.Headers.ToString()}");
+        Console.WriteLine($"Request {url} Header => {request.Headers}");
         if(Content != null){
-            Console.WriteLine($"Request Content => {Content.ToString()}");
+            Console.WriteLine($"Request Content => {Content}");
             request.Content = new StringContent(Content.ToString(), Encoding.UTF8, "application/json");
         }
-        return await _client.SendAsync(request);
+        var response = await _client.SendAsync(request);
+        if(response.Headers.Contains("set-cookie")){
+            var cookies = response.Headers.GetValues("set-cookie");
+            foreach(var cookie in cookies){
+                Console.WriteLine($"{url} => cookie => {cookie}");
+            }
+        }
+        return response;
     }
     public async Task<HttpResponseMessage> getSearchSuggestions(string input) {
         if(input == "") return new HttpResponseMessage();
         JObject content = InitializeContext();
         content.Add("input", input);
-        return await SendRequest(CreateEndPoint("get_search_suggestions"), content);
+        return await SendRequest(CreateEndPoint("music/get_search_suggestions"), content);
     }
-    public async Task<HttpResponseMessage> Search(string input, string filter = "songs", string scope = "library") {
-        if((filter != "" || scope != "") && (!Constants.Filters.Contains(filter) || !Constants.Scopes.Contains(scope))) return new HttpResponseMessage();
+    public async Task<HttpResponseMessage> Search(string input, string? filter = "", string? scope = "") {
+        if((filter != "" || scope != "") && (!Constants.Filters.Contains(filter ?? "") || !Constants.Scopes.Contains(scope ?? ""))) return new HttpResponseMessage();
         JObject content = InitializeContext();
         content.Add("query", input);
-        content.Add("params", CreateSearchParams(filter, scope, true));
+        if(filter != "" && scope != ""){
+            content.Add("params", CreateSearchParams(filter ?? "", scope  ?? "", true));
+        }
         return await SendRequest(CreateEndPoint("search"), content);
     }
     public void Dispose(){
