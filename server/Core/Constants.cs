@@ -1,5 +1,5 @@
 public static class Constants {
-    public static readonly string Domain = "https://music.youtube.com"; 
+    public static readonly Uri Domain = new Uri("https://music.youtube.com"); 
     public static readonly HashSet<string> Filters = new HashSet<string>(){
         "albums",
         "artists",

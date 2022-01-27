@@ -1,16 +1,29 @@
 using Microsoft.OpenApi.Models;
+using Newtonsoft.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
-// Create Youtube Music Service
-var youtubeMusicService = new YoutubeMusicService();
-// Add Youtube Music Service Singleton
-builder.Services.AddSingleton<IYoutubeMusicService>(youtubeMusicService);
+
+builder.Logging
+.ClearProviders()
+.AddSimpleConsole();
+
+builder.Services.AddMemoryCache();
+
+// Add Youtube Music Service Singleton With DI
+builder.Services.AddSingleton<YoutubeConfig>();
+builder.Services.AddSingleton<IYoutubeMusicService, YoutubeMusicService>();
 
 // Add services to the container.
 builder.Services.AddCors();
 
-builder.Services.AddControllers()
-.AddJsonOptions(options => options.JsonSerializerOptions.WriteIndented = true);
+builder.Services.AddControllers(options => {
+    options.RespectBrowserAcceptHeader = true;
+}) // Newtonsoft.Json 을 사용하도록 변경합니다.
+.AddNewtonsoftJson(options => {
+    options.SerializerSettings.ContractResolver = new DefaultContractResolver();
+});
+
+// Swagger Configure
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options => {
     options.SwaggerDoc("v1", new OpenApiInfo
